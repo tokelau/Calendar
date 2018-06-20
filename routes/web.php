@@ -12,38 +12,113 @@
 */
 
 use Illuminate\Http\Request;
-
-//Route::get('/', 'TaskController@index');
-
-Route::post('/', function (Request $request) {
-	// $validator = Validator::make($request->all(), [
-	// 	'topic' => 'requred|max:50',
-	// 	'comment' => 'max:65535',
-	// 	'place' => 'max:50'
-	// ]);
-
-	// if ($request->fail()) {
-	// 	return redirect('/')
-	// 		->withInput()
-	// 		->withErrors($validator);
-	// }
-
-	$task = new App\Task;
-	//$task-> //метод для присваивания полей $task->field = $request->field
-	$task->Infill($request);
-	//$task->topic = $request->topic;
-	//echo ($task->topic);
-	$task->save();
-
-	return redirect('/');
-});
+use \Carbon\Carbon;
 
 Route::get('/', function () {
-	$tasks = App\Task::all();
-    //return view('default', compact($tasks));
+	$tasks = $tasks = App\Task::where('date', '>=', now())
+                    ->orderBy('date')
+                    ->get();
     return view('default', [
     	'tasks' => $tasks,
+    	'toShow' => 'add'
     ]);
 });
 
-// Route::delete('/task/{task}')
+Route::get('/{orderType}', function ($orderType) {
+   	$tasks = [];
+	switch ($orderType) {
+		case 'overdue':
+			$tasks = App\Task::where('date', '<', now())
+                    ->orderBy('date')
+                    ->get();
+
+			break;
+		case 'current':
+			$tasks = App\Task::where('date', '>=', now())
+                    ->orderBy('date')
+                    ->get();
+
+			break;
+		case 'today':
+			$tasks = App\Task::where('date', '>=', Carbon::today())
+					->where('date', '<=', Carbon::tomorrow())
+                    ->orderBy('date')
+                    ->get();
+
+			break;
+		case 'tomorrow':
+			$tasks = App\Task::where('date', '>=', Carbon::tomorrow())
+					->where('date', '<=', Carbon::tomorrow()->addDay(1))
+                    ->orderBy('date')
+                    ->get();
+
+			break;
+	}
+	echo Carbon::tomorrow();
+	return view('default', [
+    	'tasks' => $tasks,
+    	'toShow' => 'list'
+    ]);
+});
+
+Route::post('/', function (Request $request) {
+  $validator = Validator::make($request->all(), [
+    'topic' => 'required|max:255',
+    'comment' => 'max:255'
+  ]);
+
+  if ($validator->fails()) {
+    return redirect('/')
+      ->withInput()
+      ->withErrors($validator);
+  }
+
+  $task = new App\Task;
+  $task->Infill($request);
+  $task->save();
+
+  return redirect('/');
+});
+
+Route::delete('/task/{task}', function (App\Task $task) {
+  $task->delete();
+
+  return redirect('/');
+});
+
+Route::get('/task/{task}', function ($key) {
+	$task = App\Task::find($key);
+    //return view('default', compact($tasks));
+    //echo $task->date;
+    return view('update', [
+    	'task' => $task,
+    	'key' => $key,
+    ]);
+});
+
+/*с сообщением об успешном сохранении*/
+Route::post('/task/{task}', function ($key, Request $request) {
+	$validator = Validator::make($request->all(), [
+	    'topic' => 'required|max:255',
+	    'comment' => 'max:255'
+	  ]);
+
+	  if ($validator->fails()) {
+	    return redirect('/')
+	      ->withInput()
+	      ->withErrors($validator);
+	  }
+
+	$new = new App\Task;
+	$new->Infill($request);
+
+	$task = App\Task::find($key);
+	$task->update($new->toArray());
+	$tasks = App\Task::orderBy('date', 'asc')->get();
+
+    // return view('default', [
+    // 	'tasks' => $tasks,
+    // ]);
+   	return  redirect('/');
+});
+
