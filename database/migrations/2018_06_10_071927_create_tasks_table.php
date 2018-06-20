@@ -18,8 +18,8 @@ class CreateTasksTable extends Migration
             $table->string('topic');
             $table->string('type');
             $table->string('duration');
-            $table->date('date');
-            $table->string('palce');
+            $table->datetime('date');
+            $table->string('place');
             $table->string('comment');
            // $table->timestamps();
         });
