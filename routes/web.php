@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 use \Carbon\Carbon;
 
 Route::get('/', function () {
-	$tasks = $tasks = App\Task::where('date', '>=', now())
+	$tasks = $tasks = App\Task::where('date', '>=', Carbon::now())
                     ->orderBy('date')
                     ->get();
     return view('default', [
@@ -28,13 +28,13 @@ Route::get('/{orderType}', function ($orderType) {
    	$tasks = [];
 	switch ($orderType) {
 		case 'overdue':
-			$tasks = App\Task::where('date', '<', now())
+			$tasks = App\Task::where('date', '<', Carbon::now())
                     ->orderBy('date')
                     ->get();
 
 			break;
 		case 'current':
-			$tasks = App\Task::where('date', '>=', now())
+			$tasks = App\Task::where('date', '>=', Carbon::now())
                     ->orderBy('date')
                     ->get();
 
