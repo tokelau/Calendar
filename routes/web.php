@@ -54,7 +54,6 @@ Route::get('/{orderType}', function ($orderType) {
 
 			break;
 	}
-	echo Carbon::tomorrow();
 	return view('default', [
     	'tasks' => $tasks,
     	'toShow' => 'list'
